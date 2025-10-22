@@ -158,8 +158,7 @@ def submit_survey():
     except Exception as e:
         print(f"Error saving survey response: {str(e)}")
         return jsonify({
-            'error': 'Failed to save survey response',
-            'details': str(e)
+            'error': 'Failed to save survey response'
         }), 500
 
 
@@ -193,8 +192,7 @@ def get_responses():
     except Exception as e:
         print(f"Error fetching responses: {str(e)}")
         return jsonify({
-            'error': 'Failed to fetch responses',
-            'details': str(e)
+            'error': 'Failed to fetch responses'
         }), 500
 
 
@@ -233,8 +231,7 @@ def export_csv():
     except Exception as e:
         print(f"Error exporting CSV: {str(e)}")
         return jsonify({
-            'error': 'Failed to export CSV',
-            'details': str(e)
+            'error': 'Failed to export CSV'
         }), 500
 
 
@@ -289,8 +286,7 @@ def get_stats():
     except Exception as e:
         print(f"Error fetching stats: {str(e)}")
         return jsonify({
-            'error': 'Failed to fetch statistics',
-            'details': str(e)
+            'error': 'Failed to fetch statistics'
         }), 500
 
 
@@ -301,12 +297,16 @@ if __name__ == '__main__':
     # Get port from environment variable or use default
     port = int(os.getenv('PORT', 5000))
     
+    # Get debug mode from environment variable (default to False for security)
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 'yes')
+    
     print(f"\n{'='*60}")
     print(f"District 5 Survey Backend Server")
     print(f"{'='*60}")
     print(f"Server starting on http://localhost:{port}")
     print(f"Survey available at http://localhost:{port}/survey.html")
+    print(f"Debug mode: {debug_mode}")
     print(f"{'='*60}\n")
     
     # Run the server
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
