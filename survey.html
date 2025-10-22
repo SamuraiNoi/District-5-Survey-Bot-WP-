@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>District 5 Survey - Hyde Park, Mattapan, Readville</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .radio-option,
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .radio-option:hover,
+        .checkbox-option:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+        
+        .radio-option input[type="radio"],
+        .checkbox-option input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .success-message {
+            display: none;
+            padding: 15px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .error-message {
+            display: none;
+            padding: 15px;
+            background-color: #f44336;
+            color: white;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .required {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>District 5 Voter Survey</h1>
+        <p class="subtitle">Hyde Park, Mattapan, Readville Voter Engagement Survey</p>
+        
+        <div class="success-message" id="successMessage">
+            Thank you for completing the survey! Your response has been recorded.
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            Please fill in all required fields.
+        </div>
+        
+        <form id="surveyForm">
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="(123) 456-7890">
+            </div>
+            
+            <div class="form-group">
+                <label for="name">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" required placeholder="Your full name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label>Neighborhood <span class="required">*</span></label>
+                <select id="neighborhood" name="neighborhood" required>
+                    <option value="">Select your neighborhood</option>
+                    <option value="hyde_park">Hyde Park</option>
+                    <option value="mattapan">Mattapan</option>
+                    <option value="readville">Readville</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Age Group <span class="required">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="ageGroup" value="18-24" required>
+                        <span>18-24</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="ageGroup" value="25-34" required>
+                        <span>25-34</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="ageGroup" value="35-44" required>
+                        <span>35-44</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="ageGroup" value="45-54" required>
+                        <span>45-54</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="ageGroup" value="55-64" required>
+                        <span>55-64</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="ageGroup" value="65+" required>
+                        <span>65+</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>How often do you vote? <span class="required">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="votingFrequency" value="every_election" required>
+                        <span>Every Election</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="votingFrequency" value="most_elections" required>
+                        <span>Most Elections</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="votingFrequency" value="some_elections" required>
+                        <span>Some Elections</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="votingFrequency" value="rarely" required>
+                        <span>Rarely</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="votingFrequency" value="never" required>
+                        <span>Never</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>What issues are most important to you? <span class="required">*</span></label>
+                <div class="checkbox-group">
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="education">
+                        <span>Education</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="healthcare">
+                        <span>Healthcare</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="housing">
+                        <span>Housing</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="transportation">
+                        <span>Transportation</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="public_safety">
+                        <span>Public Safety</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="economic_development">
+                        <span>Economic Development</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="issues" value="environment">
+                        <span>Environment</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>How engaged do you feel with local government? <span class="required">*</span></label>
+                <select id="engagement" name="engagement" required>
+                    <option value="">Select engagement level</option>
+                    <option value="very_engaged">Very Engaged</option>
+                    <option value="somewhat_engaged">Somewhat Engaged</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="not_very_engaged">Not Very Engaged</option>
+                    <option value="not_engaged">Not Engaged At All</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="additionalComments">Additional Comments</label>
+                <textarea id="additionalComments" name="additionalComments" placeholder="Share any additional thoughts or concerns..."></textarea>
+            </div>
+            
+            <button type="submit" class="submit-btn">Submit Survey</button>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = {
+                phoneNumber: formData.get('phoneNumber'),
+                name: formData.get('name'),
+                email: formData.get('email'),
+                neighborhood: formData.get('neighborhood'),
+                ageGroup: formData.get('ageGroup'),
+                votingFrequency: formData.get('votingFrequency'),
+                issues: formData.getAll('issues'),
+                engagement: formData.get('engagement'),
+                additionalComments: formData.get('additionalComments'),
+                timestamp: new Date().toISOString()
+            };
+            
+            // Validate that at least one issue is selected
+            if (data.issues.length === 0) {
+                errorMessage.textContent = 'Please select at least one important issue.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // Send data to backend
+                const response = await fetch('/api/submit-survey', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    successMessage.style.display = 'block';
+                    this.reset();
+                    
+                    // Scroll to top to show success message
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Hide success message after 5 seconds
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 5000);
+                } else {
+                    throw new Error('Failed to submit survey');
+                }
+            } catch (error) {
+                console.error('Error submitting survey:', error);
+                errorMessage.textContent = 'An error occurred while submitting the survey. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        });
+        
+        // Phone number formatting
+        document.getElementById('phoneNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 3) {
+                    value = '(' + value;
+                } else if (value.length <= 6) {
+                    value = '(' + value.slice(0, 3) + ') ' + value.slice(3);
+                } else {
+                    value = '(' + value.slice(0, 3) + ') ' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                }
+            }
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>
