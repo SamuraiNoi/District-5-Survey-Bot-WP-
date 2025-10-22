@@ -1,0 +1,842 @@
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, Vote, Briefcase, CheckCircle, Mail, Phone, Users, Download, BarChart3, MessageSquare, MapPin, Heart } from 'lucide-react';
+
+// Component Renamed as Requested
+const District5SurveyBot = () => {
+  const TOTAL_STEPS = 9; // Reduced from 10 by combining/removing steps
+  const [step, setStep] = useState(0);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  
+  const [responses, setResponses] = useState({
+    changeNeeded: '',
+    advisoryInterest: null,
+    directInputSupport: null,
+    policyPriority: '',
+    personalImpact: '',
+    alignment: null,
+    willVote: null,
+    phone: '', // Phone is now primary
+    email: '',
+    volunteer: null,
+    industry: '', // Now optional, collected later
+    timestamp: null
+  });
+
+  const [allResponses, setAllResponses] = useState([]);
+
+  // Sample demo data for preview mode
+  const demoData = [
+    { changeNeeded: 'Affordable Housing', advisoryInterest: 'yes', directInputSupport: 'yes', policyPriority: 'Quick Fix (Immediate Legislation)', personalImpact: 'My rent increased by 40% this year', alignment: 'yes', willVote: 'yes', phone: '617-555-0101', email: 'voter1@example.com', volunteer: 'yes', industry: 'Healthcare', timestamp: '2025-01-20T10:00:00' },
+    { changeNeeded: 'Community Safety', advisoryInterest: 'no', directInputSupport: 'yes', policyPriority: 'Community Power (Task Force)', personalImpact: 'Safety Concern', alignment: 'yes', willVote: 'yes', phone: '617-555-0102', email: '', volunteer: 'no', industry: 'Education', timestamp: '2025-01-20T11:00:00' },
+    { changeNeeded: 'Affordable Housing', advisoryInterest: 'yes', directInputSupport: 'maybe', policyPriority: 'Long-Term Funding (Grants)', personalImpact: 'Financial Stress', alignment: 'yes', willVote: 'yes', phone: '617-555-0103', email: 'voter3@example.com', volunteer: 'yes', industry: 'Technology', timestamp: '2025-01-20T12:00:00' },
+    { changeNeeded: 'Small Business Support', advisoryInterest: 'yes', directInputSupport: 'yes', policyPriority: 'Direct City Hall Action', personalImpact: 'My business struggles with high rent', alignment: 'yes', willVote: 'yes', phone: '617-555-0104', email: 'owner@business.com', volunteer: 'yes', industry: 'Small Business Owner', timestamp: '2025-01-20T13:00:00' },
+    { changeNeeded: 'Green Spaces & Parks', advisoryInterest: 'no', directInputSupport: 'yes', policyPriority: 'Community Power (Task Force)', personalImpact: 'Quality of Life', alignment: 'yes', willVote: 'no', phone: '', email: 'voter5@example.com', volunteer: 'no', industry: 'Retired', timestamp: '2025-01-20T14:00:00' },
+    { changeNeeded: 'Affordable Housing', advisoryInterest: 'yes', directInputSupport: 'yes', policyPriority: 'Quick Fix (Immediate Legislation)', personalImpact: 'Worried about displacement', alignment: 'yes', willVote: 'yes', phone: '617-555-0106', email: '', volunteer: 'no', industry: 'Construction & Trades', timestamp: '2025-01-20T15:00:00' },
+    { changeNeeded: 'Workers Rights & Fair Wages', advisoryInterest: 'yes', directInputSupport: 'yes', policyPriority: 'Quick Fix (Immediate Legislation)', personalImpact: 'Future Opportunity', alignment: 'yes', willVote: 'yes', phone: '617-555-0107', email: 'worker@example.com', volunteer: 'yes', industry: 'Retail & Service', timestamp: '2025-01-20T16:00:00' },
+    { changeNeeded: 'Community Safety', advisoryInterest: 'no', directInputSupport: 'maybe', policyPriority: 'Long-Term Funding (Grants)', personalImpact: 'Need safer streets for kids', alignment: 'no', willVote: 'no', phone: '617-555-0108', email: '', volunteer: 'no', industry: 'Healthcare', timestamp: '2025-01-20T17:00:00' }
+  ];
+
+  useEffect(() => {
+    if (!demoMode) {
+      loadResponses();
+    } else {
+      setAllResponses(demoData);
+    }
+  }, [demoMode]);
+
+  const loadResponses = async () => {
+    try {
+      // Assumes 'window.storage' is available for persistence (e.g., in a specific app environment)
+      const result = await window.storage.list('survey:');
+      if (result && result.keys) {
+        const loadedResponses = await Promise.all(
+          result.keys.map(async (key) => {
+            const data = await window.storage.get(key);
+            return data ? JSON.parse(data.value) : null;
+          })
+        );
+        setAllResponses(loadedResponses.filter(r => r !== null));
+      }
+    } catch (error) {
+      // console.error('Error loading responses:', error);
+      setAllResponses([]);
+    }
+  };
+
+  // Completed saveResponse function as requested
+  const saveResponse = async (finalResponses) => {
+    if (demoMode) {
+      // In demo mode, just add to the demo data without persisting
+      const timestamp = new Date().toISOString();
+      const responseData = { ...finalResponses, timestamp };
+      setAllResponses(prev => [...prev, responseData]);
+    } 
+    // ORIGINAL CODE CONTINUES:
+    try {
+      const timestamp = new Date().toISOString();
+      const responseData = { ...finalResponses, timestamp };
+      // Assumes 'window.storage' is available for persistence
+      await window.storage.set('survey:' + timestamp, JSON.stringify(responseData));
+      await loadResponses();
+    } catch (error) {
+      console.error('Error saving response:', error);
+    }
+  };
+
+  // Campaign Data
+  const changeOptions = [
+    'Affordable Housing',
+    'Community Safety', 
+    'Job Training & Career Development',
+    'Green Spaces & Parks',
+    'Small Business Support',
+    'Workers Rights & Fair Wages',
+    'Other'
+  ];
+
+  const industryOptions = [
+    'Healthcare',
+    'Education',
+    'Construction & Trades',
+    'Technology',
+    'Retail & Service',
+    'Government & Public Service',
+    'Small Business Owner',
+    'Student',
+    'Retired',
+    'Other'
+  ];
+
+  // Enhanced policy options with clearer action-oriented language
+  const policyOptions = [
+    'Quick Fix (Immediate Legislation)',
+    'Community Power (Task Force)',
+    'Long-Term Funding (Grants)',
+    'Direct City Hall Action'
+  ];
+
+  const campaignInfo = {
+    bio: "As a City Planner and Father, Winston understands how policy affects the kitchen table. He grew up being told to wait his turn. Now, he's running so our communities never have to wait again.",
+    localCommitment: "Winston is committed to solving the housing crisis in Mattapan, Readville, and Roslindale - because District 5 deserves a representative who knows our neighborhoods.",
+    priorities: [
+      'Build community-led affordable housing',
+      'Invest in community safety and quality of life',
+      'Create job training in afterschool programs',
+      'Preserve and expand green spaces',
+      'Support small business with fair leases',
+      'Protect workers\' rights and wages'
+    ]
+  };
+
+  // Handlers
+  const handleResponse = (field, value) => {
+    setResponses(prev => ({ ...prev, [field]: value }));
+    setStep(step + 1);
+  };
+
+  const handleTextInput = (field, value) => {
+    setResponses(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    saveResponse(responses);
+    setStep(step + 1);
+  };
+
+  const resetSurvey = () => {
+    setStep(0);
+    setResponses({
+      changeNeeded: '',
+      advisoryInterest: null,
+      directInputSupport: null,
+      policyPriority: '',
+      personalImpact: '',
+      alignment: null,
+      willVote: null,
+      phone: '',
+      email: '',
+      volunteer: null,
+      industry: '',
+      timestamp: null
+    });
+  };
+
+  const exportData = () => {
+    const csvHeader = ['Timestamp', 'Change Needed', 'Advisory Interest', 'Direct Input Support', 'Policy Priority', 'Personal Impact', 'Goals Align', 'Will Vote', 'Phone', 'Email', 'Volunteer', 'Industry'];
+    const csvRows = allResponses.map(r => [
+      r.timestamp,
+      r.changeNeeded,
+      r.advisoryInterest,
+      r.directInputSupport || '',
+      r.policyPriority || '',
+      `"${(r.personalImpact || '').replace(/"/g, '""')}"`,
+      r.alignment,
+      r.willVote,
+      r.phone || '',
+      r.email || '',
+      r.volunteer || '',
+      r.industry || ''
+    ]);
+    
+    const csv = [csvHeader, ...csvRows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'winston-campaign-data-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+  };
+
+  // Analytics
+  const getAnalytics = () => {
+    if (allResponses.length === 0) return null;
+
+    const willVoteYes = allResponses.filter(r => r.willVote === 'yes').length;
+    const volunteerYes = allResponses.filter(r => r.volunteer === 'yes').length;
+    const advisoryYes = allResponses.filter(r => r.advisoryInterest === 'yes').length;
+    const directInputYes = allResponses.filter(r => r.directInputSupport === 'yes').length;
+
+    const changeCounts = {};
+    const policyCounts = {};
+    
+    allResponses.forEach(r => {
+      if (r.changeNeeded) changeCounts[r.changeNeeded] = (changeCounts[r.changeNeeded] || 0) + 1;
+      if (r.policyPriority) policyCounts[r.policyPriority] = (policyCounts[r.policyPriority] || 0) + 1;
+    });
+
+    return {
+      total: allResponses.length,
+      willVoteYes,
+      volunteerYes,
+      advisoryYes,
+      directInputYes,
+      willVotePercent: Math.round((willVoteYes / allResponses.length) * 100),
+      volunteerPercent: Math.round((volunteerYes / allResponses.length) * 100),
+      directInputPercent: Math.round((directInputYes / allResponses.length) * 100),
+      topChange: Object.entries(changeCounts).sort((a, b) => b[1] - a[1])[0],
+      topPolicy: Object.entries(policyCounts).sort((a, b) => b[1] - a[1])[0],
+      phonesCollected: allResponses.filter(r => r.phone).length,
+      emailsCollected: allResponses.filter(r => r.email).length
+    };
+  };
+
+  const analytics = getAnalytics();
+
+  // Analytics View
+  if (showAnalytics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-8 h-8" />
+                  <div>
+                    <h1 className="text-2xl font-bold">District 5 Survey Analytics</h1>
+                    <p className="text-blue-100 text-sm">Community Input Data</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAnalytics(false)}
+                  className="bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded-lg font-semibold transition"
+                >
+                  Back to Survey
+                </button>
+              </div>
+            </div>
+
+            <div className="p-8">
+              {analytics ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border-2 border-blue-200">
+                      <div className="text-3xl font-bold text-blue-700">{analytics.total}</div>
+                      <div className="text-sm text-gray-700 font-medium">Total Responses</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border-2 border-green-200">
+                      <div className="text-3xl font-bold text-green-700">{analytics.willVotePercent}%</div>
+                      <div className="text-sm text-gray-700 font-medium">Will Vote Yes</div>
+                      <div className="text-xs text-gray-500 mt-1">{analytics.willVoteYes} voters</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border-2 border-purple-200">
+                      <div className="text-3xl font-bold text-purple-700">{analytics.phonesCollected}</div>
+                      <div className="text-sm text-gray-700 font-medium">SMS Opt-ins</div>
+                      <div className="text-xs text-gray-500 mt-1">Ready for text campaigns</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-lg border-2 border-yellow-200">
+                      <div className="text-3xl font-bold text-yellow-700">{analytics.volunteerYes}</div>
+                      <div className="text-sm text-gray-700 font-medium">Volunteers</div>
+                      <div className="text-xs text-gray-500 mt-1">{analytics.volunteerPercent}% of respondents</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                      <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                        Top Priority Issue
+                      </h3>
+                      {analytics.topChange ? (
+                        <div>
+                          <div className="text-2xl font-bold text-blue-700">{analytics.topChange[0]}</div>
+                          <div className="text-sm text-gray-600 mt-1">{analytics.topChange[1]} responses</div>
+                        </div>
+                      ) : <p className="text-sm text-gray-500">No data yet</p>}
+                    </div>
+
+                    <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                      <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-purple-600" />
+                        Preferred Action
+                      </h3>
+                      {analytics.topPolicy ? (
+                        <div>
+                          <div className="text-xl font-bold text-purple-700">{analytics.topPolicy[0]}</div>
+                          <div className="text-sm text-gray-600 mt-1">{analytics.topPolicy[1]} responses</div>
+                        </div>
+                      ) : <p className="text-sm text-gray-500">No data yet</p>}
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-lg border-2 border-indigo-200 mb-8">
+                    <h3 className="font-bold text-gray-800 mb-4">Direct Input Tool Support</h3>
+                    <div className="text-3xl font-bold text-indigo-700">{analytics.directInputPercent}%</div>
+                    <div className="text-sm text-gray-600">Support hyper-local democracy app</div>
+                  </div>
+
+                  <button
+                    onClick={exportData}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-5 h-5" />
+                    Export Campaign Data (CSV)
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-semibold">No responses yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main Survey View
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-4 flex items-center justify-center">
+      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-700 to-blue-600 p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <MapPin className="w-8 h-8" />
+              <div>
+                {/* Title Edited Here */}
+                <h1 className="text-2xl font-bold">District 5 Survey Bot</h1>
+                <p className="text-blue-100 text-sm">Community Priorities • Winston Pierre</p>
+              </div>
+            </div>
+            {allResponses.length > 0 && (
+              <button
+                onClick={() => setShowAnalytics(true)}
+                className="bg-blue-800 hover:bg-blue-900 p-2 rounded-lg transition"
+                title="View Analytics"
+              >
+                <BarChart3 className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          <div className="mt-4 bg-blue-800 bg-opacity-50 rounded-lg p-3">
+            <div className="flex justify-between text-xs">
+              <span>Progress</span>
+              <span>{Math.min(step, TOTAL_STEPS)}/{TOTAL_STEPS}</span>
+            </div>
+            <div className="mt-2 bg-blue-900 rounded-full h-2">
+              <div
+                className="bg-yellow-400 h-2 rounded-full transition-all duration-500"
+                style={{ width: (Math.min(step, TOTAL_STEPS) / TOTAL_STEPS) * 100 + '%' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-8">
+          {/* Step 0: Change Needed */}
+          {step === 0 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    What change do you need most in District 5?
+                  </h2>
+                  <p className="text-sm text-gray-600">Your priority will shape Winston's first 100 days.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {changeOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleResponse('changeNeeded', option)}
+                    className="w-full text-left bg-gray-50 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-400 p-4 rounded-lg transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-800 group-hover:text-blue-700">{option}</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 1: Advisory Interest - Enhanced "Lending Expertise" */}
+          {step === 1 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <Users className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    Would you lend your expertise to solve <span className="text-blue-600">{responses.changeNeeded}</span>?
+                  </h2>
+                  <p className="text-sm text-gray-600">We're forming resident committees to create real solutions—no waiting for politicians.</p>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-lg">
+                <p className="text-sm text-gray-700">Your knowledge matters. Help shape policy that actually works for our neighborhoods.</p>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleResponse('advisoryInterest', 'yes')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                >
+                  Yes, I'll help lead change
+                </button>
+                <button
+                  onClick={() => handleResponse('advisoryInterest', 'no')}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105"
+                >
+                  Not right now
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Direct Input Tool */}
+          {step === 2 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <MessageSquare className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    Imagine having real power between elections
+                  </h2>
+                  <p className="text-sm text-gray-600">Winston wants to build a Direct Input app—your direct line to City Hall on every vote.</p>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-5 rounded-lg border-2 border-purple-200">
+                <h3 className="font-semibold text-gray-800 mb-3">How it works:</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 font-bold">1.</span>
+                    <span>Get alerts about votes affecting {responses.changeNeeded}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 font-bold">2.</span>
+                    <span>Tell Winston how to vote—in real-time</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 font-bold">3.</span>
+                    <span>See if he keeps his promises</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleResponse('directInputSupport', 'yes')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                >
+                  Yes! Build it
+                </button>
+                <button
+                  onClick={() => handleResponse('directInputSupport', 'maybe')}
+                  className="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-800 font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105"
+                >
+                  Sounds interesting
+                </button>
+                <button
+                  onClick={() => handleResponse('directInputSupport', 'no')}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105"
+                >
+                  Not needed
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Policy Priority - Enhanced Action-Oriented */}
+          {step === 3 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-6 h-6 text-purple-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    How fast do you need action on <span className="text-blue-600">{responses.changeNeeded}</span>?
+                  </h2>
+                  <p className="text-sm text-gray-600">Tell Winston what approach will deliver results for you.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {policyOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleResponse('policyPriority', option)}
+                    className="w-full text-left bg-gray-50 hover:bg-purple-50 border-2 border-gray-200 hover:border-purple-400 p-4 rounded-lg transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-800 group-hover:text-purple-700">{option}</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Personal Impact - Enhanced Emotional Hook */}
+          {step === 4 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <Heart className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    Quick story: How is <span className="text-blue-600">{responses.changeNeeded}</span> affecting you?
+                  </h2>
+                  <p className="text-sm text-gray-600">Your story helps Winston fight harder. Keep it short—we'll text you when there's progress.</p>
+                </div>
+              </div>
+
+              <textarea
+                value={responses.personalImpact}
+                onChange={(e) => handleTextInput('personalImpact', e.target.value)}
+                placeholder="Example: 'My rent went up $400 and I might have to leave the neighborhood I grew up in...'"
+                rows="4"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none"
+              />
+              
+              <button
+                onClick={() => setStep(step + 1)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+
+          {/* Step 5: NEW - Candidate Info Page (Before Alignment) */}
+          {step === 5 && (
+            <div className="space-y-6 animate-fadeIn">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Meet Winston Pierre
+              </h2>
+              
+              <div className="bg-blue-50 border-l-4 border-blue-600 p-5 rounded-r-lg">
+                <p className="text-gray-700 leading-relaxed mb-4">{campaignInfo.bio}</p>
+                <p className="text-sm font-semibold text-blue-800">{campaignInfo.localCommitment}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 rounded-lg border border-yellow-200">
+                <h3 className="font-bold text-gray-800 mb-3">Winston's Action Plan:</h3>
+                <ul className="space-y-2">
+                  {campaignInfo.priorities.map((priority, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                      <span className="text-blue-600 font-bold">{idx + 1}.</span>
+                      <span>{priority}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">
+                  Do Winston's priorities match yours?
+                </h3>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => handleResponse('alignment', 'yes')}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                  >
+                    Yes, we're aligned
+                  </button>
+                  <button
+                    onClick={() => handleResponse('alignment', 'no')}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105"
+                  >
+                    Not sure yet
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Vote Commitment */}
+          {step === 6 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="text-center mb-6">
+                <div className="inline-block bg-blue-100 p-4 rounded-full mb-4">
+                  <Vote className="w-12 h-12 text-blue-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  Ready to make it happen?
+                </h2>
+                <p className="text-gray-600">You've shared your priorities. Now let's elect someone who'll actually listen.</p>
+              </div>
+
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg text-white text-center">
+                <p className="text-lg font-semibold mb-1">Will you vote for</p>
+                <p className="text-3xl font-bold mb-2">Winston Pierre</p>
+                <p className="text-blue-200">for District 5 City Council?</p>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleResponse('willVote', 'yes')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                >
+                  Yes, Winston has my vote!
+                </button>
+                <button
+                  onClick={() => handleResponse('willVote', 'no')}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105"
+                >
+                  Still deciding
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 7: Contact Info - SMS First */}
+          {step === 7 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <MessageSquare className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    Get Text Updates from Winston
+                  </h2>
+                  <p className="text-sm text-gray-600">Be the first to know about {responses.changeNeeded} progress. We'll text you (not spam!).</p>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
+                <p className="text-sm text-blue-800 font-semibold">📱 Why texts?</p>
+                <p className="text-xs text-gray-600 mt-1">Quick updates about your priority issue • Event invites • Voting reminders</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number <span className="text-blue-600">(Required for Text Updates)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={responses.phone}
+                    onChange={(e) => handleTextInput('phone', e.target.value)}
+                    placeholder="(617) 555-0123"
+                    className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={responses.email}
+                    onChange={(e) => handleTextInput('email', e.target.value)}
+                    placeholder="your.email@example.com"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Optional: Industry collection moved here */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Your Industry <span className="text-gray-400">(Optional - helps us understand your expertise)</span>
+                  </label>
+                  <select
+                    value={responses.industry}
+                    onChange={(e) => handleTextInput('industry', e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">Select your industry...</option>
+                    {industryOptions.map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  // This continues to step 8 without checking for phone number, allowing the user to skip the input phase
+                  onClick={() => setStep(step + 1)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all"
+                >
+                  Sign Me Up for Texts
+                </button>
+                <button
+                  onClick={() => setStep(step + 1)}
+                  className="px-6 py-4 text-gray-600 hover:text-gray-800 font-semibold transition"
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 8: Volunteer */}
+          {step === 8 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <Users className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    Join Team Winston!
+                  </h2>
+                  <p className="text-sm text-gray-600">Help bring real change to Mattapan, Readville & Roslindale.</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg border-2 border-blue-200">
+                <h3 className="font-semibold text-gray-800 mb-3">Choose your superpower:</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600">🚪</span>
+                    <span>Knock doors in your neighborhood</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600">📱</span>
+                    <span>Make calls from home</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600">📣</span>
+                    <span>Share on social media</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600">🎉</span>
+                    <span>Help at events</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    handleTextInput('volunteer', 'yes');
+                    handleSubmit();
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                >
+                  I'm in! Let's do this
+                </button>
+                <button
+                  onClick={() => {
+                    handleTextInput('volunteer', 'no');
+                    handleSubmit();
+                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-4 px-6 rounded-lg transition-all transform hover:scale-105"
+                >
+                  Not right now
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 9: Thank You - Enhanced SMS Focus */}
+          {step === 9 && (
+            <div className="space-y-6 text-center animate-fadeIn">
+              <div className="inline-block bg-green-100 p-6 rounded-full mb-4">
+                <CheckCircle className="w-16 h-16 text-green-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-800">Thank You!</h2>
+              <p className="text-lg text-gray-700">
+                {responses.willVote === 'yes' 
+                  ? `Your vote will bring real change to ${responses.changeNeeded}. Together, we're unstoppable.`
+                  : "Thanks for sharing your priorities. Winston is listening."}
+              </p>
+
+              {/* Prominent Text-to-Join */}
+              <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-lg text-white">
+                <MessageSquare className="w-8 h-8 mx-auto mb-3" />
+                <h3 className="font-bold text-xl mb-2">Join the Movement via Text!</h3>
+                <p className="text-lg mb-1">Text <span className="font-bold text-yellow-300">WINSTON</span> to</p>
+                <p className="text-3xl font-bold text-yellow-300">617-675-8993</p>
+                <p className="text-sm mt-3 text-blue-100">Get updates on {responses.changeNeeded} progress</p>
+              </div>
+
+              {responses.volunteer === 'yes' && (
+                <div className="bg-green-50 border-2 border-green-200 p-5 rounded-lg">
+                  <p className="text-green-800 font-semibold">🎉 Welcome to Team Winston!</p>
+                  <p className="text-sm text-green-700 mt-2">We'll text you about volunteer opportunities soon.</p>
+                </div>
+              )}
+
+              <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-5 rounded-lg">
+                <p className="text-gray-900 font-bold text-lg mb-1">#1 ON THE BALLOT</p>
+                <p className="text-sm text-gray-800">Primary: Sept 9 • General: Nov 4</p>
+              </div>
+
+              <div className="pt-4 space-y-3">
+                <button
+                  onClick={resetSurvey}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all"
+                >
+                  Share With Another Voter
+                </button>
+                {allResponses.length > 0 && (
+                  <button
+                    onClick={() => setShowAnalytics(true)}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-8 rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    View Campaign Analytics
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default District5SurveyBot;
